@@ -52,40 +52,52 @@ start_server() {
         log "Exporter test successful"
     fi
     
-    # Start the server
+    # Create a temporary handler script
+    local handler_script="/tmp/unbound_handler_$$"
+    
+    cat > "$handler_script" << 'EOF'
+#!/bin/bash
+read request_line
+path=$(echo "$request_line" | cut -d' ' -f2)
+
+# Skip headers
+while read line && [ "$line" != "" ] && [ "$line" != "$(printf '\r')" ]; do
+    continue
+done
+
+case "$path" in
+    "/metrics")
+        metrics=$(EXPORTER_SCRIPT collect 2>/dev/null || echo "# Error")
+        printf "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: %d\r\n\r\n%s" "$(printf "%s" "$metrics" | wc -c)" "$metrics"
+        ;;
+    "/health")
+        if EXPORTER_SCRIPT test >/dev/null 2>&1; then
+            printf "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\nOK"
+        else
+            printf "HTTP/1.1 503 Service Unavailable\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\nERROR"
+        fi
+        ;;
+    "/")
+        html="<!DOCTYPE html><html><head><title>Unbound Exporter</title></head><body><h1>Unbound Prometheus Exporter</h1><p><a href=\"/metrics\">Metrics</a> | <a href=\"/health\">Health</a></p></body></html>"
+        printf "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n%s" "$(printf "%s" "$html" | wc -c)" "$html"
+        ;;
+    *)
+        printf "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\n404 Not Found"
+        ;;
+esac
+EOF
+    
+    # Replace EXPORTER_SCRIPT placeholder with actual path
+    sed -i "s|EXPORTER_SCRIPT|$EXPORTER_SCRIPT|g" "$handler_script"
+    chmod +x "$handler_script"
+    
+    # Cleanup on exit
+    trap "rm -f '$handler_script'" EXIT
+    
     log "Server starting..."
     
-    # Simple socat HTTP server
-    exec socat TCP-LISTEN:${LISTEN_PORT},bind=${LISTEN_ADDRESS},reuseaddr,fork SYSTEM:'
-        read request_line
-        path=$(echo "$request_line" | cut -d" " -f2)
-        
-        # Skip headers
-        while read line && [ "$line" != "" ] && [ "$line" != "$(printf '"'"'\r'"'"')" ]; do
-            continue
-        done
-        
-        case "$path" in
-            "/metrics")
-                metrics=$('${EXPORTER_SCRIPT}' collect 2>/dev/null || echo "# Error")
-                printf "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: %d\r\n\r\n%s" "$(printf "%s" "$metrics" | wc -c)" "$metrics"
-                ;;
-            "/health")
-                if '${EXPORTER_SCRIPT}' test >/dev/null 2>&1; then
-                    printf "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\nOK"
-                else
-                    printf "HTTP/1.1 503 Service Unavailable\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\nERROR"
-                fi
-                ;;
-            "/")
-                html="<!DOCTYPE html><html><head><title>Unbound Exporter</title></head><body><h1>Unbound Prometheus Exporter</h1><p><a href=\"/metrics\">Metrics</a> | <a href=\"/health\">Health</a></p></body></html>"
-                printf "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n%s" "$(printf "%s" "$html" | wc -c)" "$html"
-                ;;
-            *)
-                printf "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\n404 Not Found"
-                ;;
-        esac
-    '
+    # Use socat with the handler script
+    exec socat TCP-LISTEN:${LISTEN_PORT},bind=${LISTEN_ADDRESS},reuseaddr,fork EXEC:"$handler_script"
 }
 
 # Function to stop the server (for systemd)
