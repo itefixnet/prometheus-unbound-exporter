@@ -114,6 +114,31 @@ get_basic_stats() {
                 value=$(extract_value "$line")
                 format_metric "request_list_current" "$value" "" "Current number of requests in the request list"
                 ;;
+            *"total.num.queries_ip_ratelimited="*)
+                local value
+                value=$(extract_value "$line")
+                format_metric "queries_ip_ratelimited_total" "$value" "" "Total number of IP rate limited queries" "counter"
+                ;;
+            *"total.num.zero_ttl="*)
+                local value
+                value=$(extract_value "$line")
+                format_metric "zero_ttl_total" "$value" "" "Total number of zero TTL responses" "counter"
+                ;;
+            *"total.recursion.time.avg="*)
+                local value
+                value=$(extract_value "$line")
+                format_metric "recursion_time_avg_seconds" "$value" "" "Average recursion time in seconds"
+                ;;
+            *"total.recursion.time.median="*)
+                local value
+                value=$(extract_value "$line")
+                format_metric "recursion_time_median_seconds" "$value" "" "Median recursion time in seconds"
+                ;;
+            *"total.tcpusage="*)
+                local value
+                value=$(extract_value "$line")
+                format_metric "tcp_usage" "$value" "" "TCP usage"
+                ;;
         esac
     done <<< "$stats"
 }
@@ -227,12 +252,15 @@ get_thread_stats() {
     stats=$(unbound_cmd "stats_noreset")
     
     # Parse thread statistics
-    local thread_num=0
     while IFS= read -r line; do
         if [[ "$line" =~ ^thread([0-9]+)\.num\.queries=(.+)$ ]]; then
             local thread_id="${BASH_REMATCH[1]}"
             local value="${BASH_REMATCH[2]}"
             format_metric "thread_queries_total" "$value" "thread=\"$thread_id\"" "Total queries per thread" "counter"
+        elif [[ "$line" =~ ^thread([0-9]+)\.num\.queries_ip_ratelimited=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_queries_ip_ratelimited_total" "$value" "thread=\"$thread_id\"" "Total IP rate limited queries per thread" "counter"
         elif [[ "$line" =~ ^thread([0-9]+)\.num\.cachehits=(.+)$ ]]; then
             local thread_id="${BASH_REMATCH[1]}"
             local value="${BASH_REMATCH[2]}"
@@ -241,6 +269,54 @@ get_thread_stats() {
             local thread_id="${BASH_REMATCH[1]}"
             local value="${BASH_REMATCH[2]}"
             format_metric "thread_cache_miss_total" "$value" "thread=\"$thread_id\"" "Total cache misses per thread" "counter"
+        elif [[ "$line" =~ ^thread([0-9]+)\.num\.prefetch=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_prefetch_total" "$value" "thread=\"$thread_id\"" "Total prefetches per thread" "counter"
+        elif [[ "$line" =~ ^thread([0-9]+)\.num\.zero_ttl=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_zero_ttl_total" "$value" "thread=\"$thread_id\"" "Total zero TTL responses per thread" "counter"
+        elif [[ "$line" =~ ^thread([0-9]+)\.num\.recursivereplies=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_recursive_replies_total" "$value" "thread=\"$thread_id\"" "Total recursive replies per thread" "counter"
+        elif [[ "$line" =~ ^thread([0-9]+)\.requestlist\.avg=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_request_list_avg" "$value" "thread=\"$thread_id\"" "Average request list size per thread"
+        elif [[ "$line" =~ ^thread([0-9]+)\.requestlist\.max=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_request_list_max" "$value" "thread=\"$thread_id\"" "Maximum request list size per thread"
+        elif [[ "$line" =~ ^thread([0-9]+)\.requestlist\.overwritten=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_request_list_overwritten_total" "$value" "thread=\"$thread_id\"" "Total overwritten requests per thread" "counter"
+        elif [[ "$line" =~ ^thread([0-9]+)\.requestlist\.exceeded=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_request_list_exceeded_total" "$value" "thread=\"$thread_id\"" "Total exceeded requests per thread" "counter"
+        elif [[ "$line" =~ ^thread([0-9]+)\.requestlist\.current\.all=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_request_list_current_all" "$value" "thread=\"$thread_id\"" "Current requests in list (all) per thread"
+        elif [[ "$line" =~ ^thread([0-9]+)\.requestlist\.current\.user=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_request_list_current_user" "$value" "thread=\"$thread_id\"" "Current requests in list (user) per thread"
+        elif [[ "$line" =~ ^thread([0-9]+)\.recursion\.time\.avg=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_recursion_time_avg_seconds" "$value" "thread=\"$thread_id\"" "Average recursion time per thread"
+        elif [[ "$line" =~ ^thread([0-9]+)\.recursion\.time\.median=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_recursion_time_median_seconds" "$value" "thread=\"$thread_id\"" "Median recursion time per thread"
+        elif [[ "$line" =~ ^thread([0-9]+)\.tcpusage=(.+)$ ]]; then
+            local thread_id="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            format_metric "thread_tcp_usage" "$value" "thread=\"$thread_id\"" "TCP usage per thread"
         fi
     done <<< "$stats"
 }
