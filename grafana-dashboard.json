@@ -101,13 +101,13 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 0,
+        "x": 16,
         "y": 0
       },
       "id": 1,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
@@ -117,7 +117,7 @@
           ],
           "fields": ""
         },
-        "textMode": "auto"
+        "textMode": "value"
       },
       "pluginVersion": "8.0.0",
       "targets": [
@@ -131,6 +131,69 @@
         }
       ],
       "title": "Uptime",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(unbound_recursive_replies_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "A"
+        }
+      ],
+      "title": "Recursive Rate",
       "type": "stat"
     },
     {
@@ -191,8 +254,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 4,
+        "w": 8,
+        "x": 8,
         "y": 0
       },
       "id": 2,
@@ -275,7 +338,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 16,
+        "x": 0,
         "y": 0
       },
       "id": 3,
@@ -338,7 +401,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 20,
+        "x": 4,
         "y": 0
       },
       "id": 4,
