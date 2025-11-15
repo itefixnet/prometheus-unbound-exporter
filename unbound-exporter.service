@@ -1,0 +1,16 @@
+[Unit]
+Description=Unbound Prometheus Exporter
+After=network.target
+
+[Service]
+Type=simple
+User=unbound-exporter
+Group=unbound-exporter
+ExecStart=/opt/unbound-exporter/http-server.sh start
+Restart=always
+RestartSec=5
+WorkingDirectory=/opt/unbound-exporter
+EnvironmentFile=-/opt/unbound-exporter/unbound-exporter.conf
+
+[Install]
+WantedBy=multi-user.target
