@@ -5,13 +5,14 @@ A lightweight, bash-based Prometheus exporter for Unbound DNS resolver statistic
 ## Features
 
 - **Pure Bash Implementation**: No external dependencies except `socat` and `unbound-control`
-- **Comprehensive Metrics**: Exports all major Unbound statistics including:
-  - Query rates and types
-  - Cache hit/miss ratios
+- **Comprehensive Metrics**: Exports all available Unbound statistics including:
+  - Query rates, cache performance, and prefetching
+  - Rate limiting and security metrics (IP rate limiting, zero TTL)
+  - Performance metrics (recursion times, TCP usage)
+  - Detailed per-thread statistics with full breakdown
   - Memory usage by component
-  - Thread statistics
-  - Response codes distribution
-  - Request list statistics
+  - Request list and queue management statistics
+  - Extended query types and response codes (if configured)
 - **HTTP Server**: Built-in HTTP server using socat for serving metrics
 - **Systemd Integration**: Ready-to-use systemd service file
 - **Grafana Dashboard**: Pre-built comprehensive dashboard
@@ -114,15 +115,24 @@ sudo systemctl restart unbound
 
 ## Metrics
 
-The exporter provides the following Prometheus metrics:
+The exporter provides the following comprehensive Prometheus metrics:
 
 ### Basic Statistics
 - `unbound_queries_total` - Total number of queries
-- `unbound_cache_hits_total` - Total cache hits
+- `unbound_cache_hits_total` - Total cache hits  
 - `unbound_cache_miss_total` - Total cache misses
 - `unbound_prefetch_total` - Total prefetches
 - `unbound_recursive_replies_total` - Total recursive replies
-- `unbound_uptime_seconds` - Unbound uptime
+- `unbound_uptime_seconds` - Unbound uptime in seconds
+
+### Rate Limiting & Security
+- `unbound_queries_ip_ratelimited_total` - Total IP rate limited queries
+- `unbound_zero_ttl_total` - Total zero TTL responses
+
+### Performance Metrics
+- `unbound_recursion_time_avg_seconds` - Average recursion time
+- `unbound_recursion_time_median_seconds` - Median recursion time
+- `unbound_tcp_usage` - TCP connection usage
 
 ### Request List Statistics
 - `unbound_request_list_current` - Current requests in queue
@@ -138,18 +148,37 @@ The exporter provides the following Prometheus metrics:
 - `unbound_memory_module_validator_bytes` - Validator module memory
 - `unbound_memory_streamwait_bytes` - Stream wait memory
 
-### Query Statistics by Labels
-- `unbound_queries_by_type_total{type="A|AAAA|PTR|..."}` - Queries by type
-- `unbound_queries_by_class_total{class="IN|CH|..."}` - Queries by class
-- `unbound_answers_by_rcode_total{rcode="NOERROR|NXDOMAIN|..."}` - Answers by response code
+### Thread Statistics (Per-Thread Labels)
+- `unbound_thread_queries_total{thread="N"}` - Queries per thread
+- `unbound_thread_queries_ip_ratelimited_total{thread="N"}` - IP rate limited queries per thread
+- `unbound_thread_cache_hits_total{thread="N"}` - Cache hits per thread
+- `unbound_thread_cache_miss_total{thread="N"}` - Cache misses per thread
+- `unbound_thread_prefetch_total{thread="N"}` - Prefetches per thread
+- `unbound_thread_zero_ttl_total{thread="N"}` - Zero TTL responses per thread
+- `unbound_thread_recursive_replies_total{thread="N"}` - Recursive replies per thread
 
-### Thread Statistics
-- `unbound_thread_queries_total{thread="0|1|2|..."}` - Queries per thread
-- `unbound_thread_cache_hits_total{thread="0|1|2|..."}` - Cache hits per thread
-- `unbound_thread_cache_miss_total{thread="0|1|2|..."}` - Cache misses per thread
+### Thread Performance Metrics
+- `unbound_thread_recursion_time_avg_seconds{thread="N"}` - Average recursion time per thread
+- `unbound_thread_recursion_time_median_seconds{thread="N"}` - Median recursion time per thread
+- `unbound_thread_tcp_usage{thread="N"}` - TCP usage per thread
+
+### Thread Request List Statistics
+- `unbound_thread_request_list_avg{thread="N"}` - Average request list size per thread
+- `unbound_thread_request_list_max{thread="N"}` - Maximum request list size per thread
+- `unbound_thread_request_list_overwritten_total{thread="N"}` - Overwritten requests per thread
+- `unbound_thread_request_list_exceeded_total{thread="N"}` - Exceeded requests per thread
+- `unbound_thread_request_list_current_all{thread="N"}` - Current requests (all) per thread
+- `unbound_thread_request_list_current_user{thread="N"}` - Current requests (user) per thread
+
+### Query Statistics by Labels
+- `unbound_queries_by_type_total{type="A|AAAA|PTR|..."}` - Queries by type *(requires extended stats)*
+- `unbound_queries_by_class_total{class="IN|CH|..."}` - Queries by class *(requires extended stats)*
+- `unbound_answers_by_rcode_total{rcode="NOERROR|NXDOMAIN|..."}` - Answers by response code *(requires extended stats)*
 
 ### Version Information
 - `unbound_info{version="1.x.x"}` - Unbound version info
+
+> **Note**: Some metrics (query types, classes, response codes) require Unbound to be configured with `statistics-extended: yes`. The exporter automatically detects and exports all available statistics from your Unbound instance.
 
 ## Usage Examples
 
@@ -212,6 +241,15 @@ Import the provided `grafana-dashboard.json` file into your Grafana instance:
 - If you get "data source was not found" error, ensure your Prometheus datasource is properly configured in Grafana
 - Make sure your Prometheus is scraping the Unbound exporter endpoints
 - Verify metrics are available by checking: `http://your-grafana/explore` → Select Prometheus → Query `unbound_uptime_seconds`
+
+**Dashboard Features:**
+The comprehensive Grafana dashboard includes:
+- **Overview Panels**: Uptime, query rates, cache hit rate, total queries
+- **Performance Monitoring**: Recursion times, request list statistics
+- **Security & Rate Limiting**: IP rate limited queries, zero TTL responses  
+- **TCP Usage**: Connection monitoring
+- **Per-Thread Analysis**: Detailed thread-level performance breakdowns
+- **Multi-Instance Support**: Template variables for filtering by instance and job
 
 **Multi-Instance Support:**
 The dashboard includes template variables for monitoring multiple Unbound instances:

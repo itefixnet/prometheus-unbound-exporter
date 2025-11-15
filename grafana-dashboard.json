@@ -99,8 +99,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 4,
+        "w": 4,
         "x": 0,
         "y": 0
       },
@@ -111,15 +111,15 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "8.0.0",
       "targets": [
         {
           "datasource": {
@@ -130,7 +130,7 @@
           "refId": "A"
         }
       ],
-      "title": "Unbound Uptime",
+      "title": "Uptime",
       "type": "stat"
     },
     {
@@ -148,7 +148,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -161,7 +161,7 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -192,7 +192,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
+        "x": 4,
         "y": 0
       },
       "id": 2,
@@ -203,11 +203,9 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
+          "mode": "single"
         }
       },
-      "pluginVersion": "9.0.0",
       "targets": [
         {
           "datasource": {
@@ -215,8 +213,26 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(unbound_queries_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
-          "legendFormat": "{{instance}} - Queries/sec",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "Queries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(unbound_cache_hits_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "B",
+          "legendFormat": "Cache Hits"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(unbound_cache_miss_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "C",
+          "legendFormat": "Cache Misses"
         }
       ],
       "title": "Query Rate",
@@ -230,47 +246,25 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "green",
+                "value": 85
               }
             ]
           },
@@ -279,36 +273,39 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
       },
       "id": 3,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "textMode": "auto"
       },
+      "pluginVersion": "8.0.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_cache_hits_total{instance=~\"$instance\",job=~\"$job\"}[5m]) / (rate(unbound_cache_hits_total{instance=~\"$instance\",job=~\"$job\"}[5m]) + rate(unbound_cache_miss_total{instance=~\"$instance\",job=~\"$job\"}[5m])) * 100",
-          "legendFormat": "{{instance}} - Cache Hit Rate",
+          "expr": "100 * unbound_cache_hits_total{instance=~\"$instance\",job=~\"$job\"} / (unbound_cache_hits_total{instance=~\"$instance\",job=~\"$job\"} + unbound_cache_miss_total{instance=~\"$instance\",job=~\"$job\"})",
           "refId": "A"
         }
       ],
       "title": "Cache Hit Rate",
-      "type": "timeseries"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -318,57 +315,60 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            }
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           },
-          "mappings": []
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
       },
       "id": 4,
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "pieType": "pie",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "textMode": "auto"
       },
+      "pluginVersion": "8.0.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_queries_by_type_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
-          "legendFormat": "{{type}} - {{instance}}",
+          "expr": "unbound_queries_total{instance=~\"$instance\",job=~\"$job\"}",
           "refId": "A"
         }
       ],
-      "title": "Query Types Distribution",
-      "type": "piechart"
+      "title": "Total Queries",
+      "type": "stat"
     },
     {
       "datasource": {
@@ -385,7 +385,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -398,7 +398,7 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -422,7 +422,7 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "s"
         },
         "overrides": []
       },
@@ -430,7 +430,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 4
       },
       "id": 5,
       "options": {
@@ -440,8 +440,7 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
+          "mode": "single"
         }
       },
       "targets": [
@@ -450,100 +449,22 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "unbound_memory_cache_rrset_bytes{instance=\"$instance\"}",
-          "legendFormat": "{{instance}} - RRset Cache",
-          "refId": "A"
+          "expr": "unbound_recursion_time_avg_seconds{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "A",
+          "legendFormat": "Average Recursion Time"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "unbound_memory_cache_message_bytes{instance=\"$instance\"}",
-          "legendFormat": "{{instance}} - Message Cache",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "unbound_memory_module_iterator_bytes{instance=\"$instance\"}",
-          "legendFormat": "{{instance}} - Iterator Module",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "unbound_memory_module_validator_bytes{instance=\"$instance\"}",
-          "legendFormat": "{{instance}} - Validator Module",
-          "refId": "D"
+          "expr": "unbound_recursion_time_median_seconds{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "B",
+          "legendFormat": "Median Recursion Time"
         }
       ],
-      "title": "Memory Usage by Component",
+      "title": "Recursion Time",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "id": 6,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "rate(unbound_answers_by_rcode_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{rcode}} - {{instance}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Response Codes Distribution",
-      "type": "piechart"
     },
     {
       "datasource": {
@@ -560,7 +481,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -573,7 +494,7 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -604,10 +525,10 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 24
+        "x": 12,
+        "y": 4
       },
-      "id": 7,
+      "id": 6,
       "options": {
         "legend": {
           "calcs": [],
@@ -615,8 +536,7 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
+          "mode": "single"
         }
       },
       "targets": [
@@ -625,27 +545,27 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "unbound_request_list_current{instance=\"$instance\"}",
-          "legendFormat": "{{instance}} - Current",
-          "refId": "A"
+          "expr": "unbound_request_list_avg{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "A",
+          "legendFormat": "Average Request List Size"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "unbound_request_list_avg{instance=\"$instance\"}",
-          "legendFormat": "{{instance}} - Average",
-          "refId": "B"
+          "expr": "unbound_request_list_max{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "B",
+          "legendFormat": "Max Request List Size"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "unbound_request_list_max{instance=\"$instance\"}",
-          "legendFormat": "{{instance}} - Maximum",
-          "refId": "C"
+          "expr": "unbound_request_list_current{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "C",
+          "legendFormat": "Current Request List Size"
         }
       ],
       "title": "Request List Statistics",
@@ -666,7 +586,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -679,7 +599,290 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(unbound_queries_ip_ratelimited_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "A",
+          "legendFormat": "IP Rate Limited Queries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(unbound_zero_ttl_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "B",
+          "legendFormat": "Zero TTL Responses"
+        }
+      ],
+      "title": "Rate Limiting & Zero TTL",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "unbound_tcp_usage{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "A",
+          "legendFormat": "TCP Usage"
+        }
+      ],
+      "title": "TCP Usage",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 9,
+      "panels": [],
+      "title": "Per-Thread Statistics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(unbound_thread_queries_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "A",
+          "legendFormat": "Thread {{thread}} Queries"
+        }
+      ],
+      "title": "Thread Query Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -711,9 +914,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 21
       },
-      "id": 8,
+      "id": 11,
       "options": {
         "legend": {
           "calcs": [],
@@ -721,8 +924,7 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
+          "mode": "single"
         }
       },
       "targets": [
@@ -731,12 +933,21 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_thread_queries_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{instance}} - Thread {{thread}}",
-          "refId": "A"
+          "expr": "rate(unbound_thread_cache_hits_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "A",
+          "legendFormat": "Thread {{thread}} Cache Hits"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(unbound_thread_cache_miss_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "refId": "B",
+          "legendFormat": "Thread {{thread}} Cache Misses"
         }
       ],
-      "title": "Queries per Thread",
+      "title": "Thread Cache Performance",
       "type": "timeseries"
     },
     {
@@ -754,7 +965,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -767,7 +978,7 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -791,17 +1002,17 @@
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "s"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
-        "y": 32
+        "y": 29
       },
-      "id": 9,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [],
@@ -809,8 +1020,7 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
+          "mode": "single"
         }
       },
       "targets": [
@@ -819,43 +1029,131 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_cache_hits_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{instance}} - Cache Hits",
-          "refId": "A"
+          "expr": "unbound_thread_recursion_time_avg_seconds{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "A",
+          "legendFormat": "Thread {{thread}} Avg Recursion Time"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_cache_miss_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{instance}} - Cache Misses",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "rate(unbound_prefetch_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{instance}} - Prefetches",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "rate(unbound_recursive_replies_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{instance}} - Recursive Replies",
-          "refId": "D"
+          "expr": "unbound_thread_recursion_time_median_seconds{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "B",
+          "legendFormat": "Thread {{thread}} Median Recursion Time"
         }
       ],
-      "title": "Cache and Recursive Statistics",
+      "title": "Thread Recursion Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 29
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "unbound_thread_request_list_avg{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "A",
+          "legendFormat": "Thread {{thread}} Avg Request List"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "unbound_thread_request_list_max{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "B",
+          "legendFormat": "Thread {{thread}} Max Request List"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "unbound_thread_request_list_current_all{instance=~\"$instance\",job=~\"$job\"}",
+          "refId": "C",
+          "legendFormat": "Thread {{thread}} Current Request List"
+        }
+      ],
+      "title": "Thread Request List Statistics",
       "type": "timeseries"
     }
   ],
-  "schemaVersion": 36,
+  "refresh": "30s",
+  "schemaVersion": 27,
   "style": "dark",
   "tags": [
     "unbound",
@@ -934,8 +1232,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Unbound DNS Resolver Dashboard",
-  "uid": "unbound-dns-dashboard",
-  "version": 1,
+  "title": "Unbound DNS Resolver Dashboard - Complete",
+  "uid": "unbound-dns-dashboard-complete",
+  "version": 2,
   "weekStart": ""
 }
