@@ -173,13 +173,28 @@ curl http://localhost:9167/
 
 ### Prometheus Configuration
 
-Add this job to your `prometheus.yml`:
+Add jobs to your `prometheus.yml` for single or multiple Unbound instances:
 
 ```yaml
 scrape_configs:
+  # Single instance
   - job_name: 'unbound-exporter'
     static_configs:
       - targets: ['localhost:9167']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    
+  # Multiple instances with labels
+  - job_name: 'unbound-dns-servers'
+    static_configs:
+      - targets: ['192.168.1.10:8904', '192.168.1.11:8904']
+        labels:
+          environment: 'production'
+          datacenter: 'dc1'
+      - targets: ['192.168.150.1:8904']
+        labels:
+          environment: 'staging' 
+          datacenter: 'dc2'
     scrape_interval: 30s
     metrics_path: /metrics
 ```
@@ -189,19 +204,46 @@ scrape_configs:
 Import the provided `grafana-dashboard.json` file into your Grafana instance:
 
 1. Go to Dashboards → Import
-2. Upload `grafana-dashboard.json`
-3. Select your Prometheus datasource
-4. Save the dashboard
+2. Upload `grafana-dashboard.json` or copy/paste the JSON content
+3. **Configure Data Source**: Select your Prometheus datasource from the dropdown
+4. Click "Import"
 
-The dashboard includes:
-- Uptime monitoring
-- Query rate trends
-- Cache hit rate percentage
-- Query type distribution
-- Response code distribution
-- Memory usage by component
-- Thread performance
+**Troubleshooting Dashboard Import:**
+- If you get "data source was not found" error, ensure your Prometheus datasource is properly configured in Grafana
+- Make sure your Prometheus is scraping the Unbound exporter endpoints
+- Verify metrics are available by checking: `http://your-grafana/explore` → Select Prometheus → Query `unbound_uptime_seconds`
+
+**Multi-Instance Support:**
+The dashboard includes template variables for monitoring multiple Unbound instances:
+- **Instance**: Filter by specific instance (e.g., `192.168.150.1:8904`, `localhost:9167`)
+- **Job**: Filter by Prometheus job name
+
+To monitor multiple instances, configure your `prometheus.yml`:
+```yaml
+scrape_configs:
+  - job_name: 'unbound-dns'
+    static_configs:
+      - targets: 
+        - 'localhost:9167'
+        - '192.168.150.1:8904'
+        - '10.0.1.5:9167'
+```
+
+The dashboard supports:
+- **Multi-Instance Monitoring**: Automatically discovers all Unbound exporters
+- **Flexible Filtering**: Filter by instance (host:port) and job name
+- **Multi-Select Variables**: Monitor multiple instances simultaneously
+- **Instance Labeling**: All metrics show which instance they come from
+
+Dashboard features:
+- Uptime monitoring per instance
+- Query rate trends with instance breakdown
+- Cache hit rate percentage by server
+- Query type and response code distribution
+- Memory usage by component per instance
+- Thread performance analysis
 - Request queue statistics
+- Support for any host:port combination (e.g., `192.168.150.1:8904`)
 
 ## Troubleshooting
 

@@ -1,4 +1,46 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus data source for Unbound metrics",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "8.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "piechart",
+      "name": "Pie chart",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -84,7 +126,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "unbound_uptime_seconds{instance=\"$instance\"}",
+          "expr": "unbound_uptime_seconds{instance=~\"$instance\",job=~\"$job\"}",
           "refId": "A"
         }
       ],
@@ -172,8 +214,8 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_queries_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "Queries per second",
+          "expr": "rate(unbound_queries_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "legendFormat": "{{instance}} - Queries/sec",
           "refId": "A"
         }
       ],
@@ -260,8 +302,8 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_cache_hits_total{instance=\"$instance\"}[5m]) / (rate(unbound_cache_hits_total{instance=\"$instance\"}[5m]) + rate(unbound_cache_miss_total{instance=\"$instance\"}[5m])) * 100",
-          "legendFormat": "Cache Hit Rate",
+          "expr": "rate(unbound_cache_hits_total{instance=~\"$instance\",job=~\"$job\"}[5m]) / (rate(unbound_cache_hits_total{instance=~\"$instance\",job=~\"$job\"}[5m]) + rate(unbound_cache_miss_total{instance=~\"$instance\",job=~\"$job\"}[5m])) * 100",
+          "legendFormat": "{{instance}} - Cache Hit Rate",
           "refId": "A"
         }
       ],
@@ -320,8 +362,8 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(unbound_queries_by_type_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{type}}",
+          "expr": "rate(unbound_queries_by_type_total{instance=~\"$instance\",job=~\"$job\"}[5m])",
+          "legendFormat": "{{type}} - {{instance}}",
           "refId": "A"
         }
       ],
@@ -409,7 +451,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "unbound_memory_cache_rrset_bytes{instance=\"$instance\"}",
-          "legendFormat": "RRset Cache",
+          "legendFormat": "{{instance}} - RRset Cache",
           "refId": "A"
         },
         {
@@ -418,7 +460,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "unbound_memory_cache_message_bytes{instance=\"$instance\"}",
-          "legendFormat": "Message Cache",
+          "legendFormat": "{{instance}} - Message Cache",
           "refId": "B"
         },
         {
@@ -427,7 +469,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "unbound_memory_module_iterator_bytes{instance=\"$instance\"}",
-          "legendFormat": "Iterator Module",
+          "legendFormat": "{{instance}} - Iterator Module",
           "refId": "C"
         },
         {
@@ -436,7 +478,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "unbound_memory_module_validator_bytes{instance=\"$instance\"}",
-          "legendFormat": "Validator Module",
+          "legendFormat": "{{instance}} - Validator Module",
           "refId": "D"
         }
       ],
@@ -496,7 +538,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(unbound_answers_by_rcode_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "{{rcode}}",
+          "legendFormat": "{{rcode}} - {{instance}}",
           "refId": "A"
         }
       ],
@@ -584,7 +626,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "unbound_request_list_current{instance=\"$instance\"}",
-          "legendFormat": "Current Requests",
+          "legendFormat": "{{instance}} - Current",
           "refId": "A"
         },
         {
@@ -593,7 +635,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "unbound_request_list_avg{instance=\"$instance\"}",
-          "legendFormat": "Average Requests",
+          "legendFormat": "{{instance}} - Average",
           "refId": "B"
         },
         {
@@ -602,7 +644,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "unbound_request_list_max{instance=\"$instance\"}",
-          "legendFormat": "Maximum Requests",
+          "legendFormat": "{{instance}} - Maximum",
           "refId": "C"
         }
       ],
@@ -690,7 +732,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(unbound_thread_queries_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "Thread {{thread}}",
+          "legendFormat": "{{instance}} - Thread {{thread}}",
           "refId": "A"
         }
       ],
@@ -778,7 +820,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(unbound_cache_hits_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "Cache Hits",
+          "legendFormat": "{{instance}} - Cache Hits",
           "refId": "A"
         },
         {
@@ -787,7 +829,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(unbound_cache_miss_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "Cache Misses",
+          "legendFormat": "{{instance}} - Cache Misses",
           "refId": "B"
         },
         {
@@ -796,7 +838,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(unbound_prefetch_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "Prefetches",
+          "legendFormat": "{{instance}} - Prefetches",
           "refId": "C"
         },
         {
@@ -805,7 +847,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(unbound_recursive_replies_total{instance=\"$instance\"}[5m])",
-          "legendFormat": "Recursive Replies",
+          "legendFormat": "{{instance}} - Recursive Replies",
           "refId": "D"
         }
       ],
@@ -825,28 +867,64 @@
       {
         "current": {
           "selected": false,
-          "text": "localhost:9167",
-          "value": "localhost:9167"
+          "text": "All",
+          "value": "$__all"
         },
         "datasource": {
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(unbound_uptime_seconds, instance)",
+        "description": "Select Unbound DNS server instances to monitor",
         "hide": 0,
-        "includeAll": false,
-        "multi": false,
+        "includeAll": true,
+        "multi": true,
         "name": "instance",
         "options": [],
         "query": {
           "query": "label_values(unbound_uptime_seconds, instance)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
+        "sort": 1,
+        "tag": "unbound",
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(unbound_uptime_seconds{instance=~\"$instance\"}, job)",
+        "description": "Filter by Prometheus job name",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "job",
+        "options": [],
+        "query": {
+          "query": "label_values(unbound_uptime_seconds{instance=~\"$instance\"}, job)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tag": "prometheus",
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
