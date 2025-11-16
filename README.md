@@ -175,6 +175,9 @@ The exporter provides the following comprehensive Prometheus metrics:
 - `unbound_queries_by_class_total{class="IN|CH|..."}` - Queries by class *(requires extended stats)*
 - `unbound_answers_by_rcode_total{rcode="NOERROR|NXDOMAIN|..."}` - Answers by response code *(requires extended stats)*
 
+### Histogram Metrics
+- `unbound_query_duration_seconds_bucket{le="X.X"}` - Query duration histogram buckets *(requires extended stats)*
+
 ### Version Information
 - `unbound_info{version="1.x.x"}` - Unbound version info
 
