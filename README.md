@@ -100,6 +100,12 @@ Ensure Unbound has the control interface enabled in `/etc/unbound/unbound.conf`:
 ```
 server:
     # ... other settings ...
+    
+    # Enable extended statistics for query types, classes, and response codes
+    statistics-extended: yes
+    
+    # Optional: Enable histogram statistics for query duration metrics
+    statistics-cumulative: yes
 
 remote-control:
     control-enable: yes
@@ -107,6 +113,20 @@ remote-control:
     control-port: 8953
     control-use-cert: no
 ```
+
+**Extended Statistics Configuration:**
+
+To enable the additional metrics mentioned in the metrics section, add these options to the `server:` section:
+
+- **`statistics-extended: yes`** - Enables query type, class, and response code statistics:
+  - `unbound_queries_by_type_total{type="A|AAAA|PTR|..."}` 
+  - `unbound_queries_by_class_total{class="IN|CH|..."}`
+  - `unbound_answers_by_rcode_total{rcode="NOERROR|NXDOMAIN|..."}`
+
+- **`statistics-cumulative: yes`** - Enables histogram and duration statistics:
+  - `unbound_query_duration_seconds_bucket{le="X.X"}`
+
+**Note:** Extended statistics may increase memory usage slightly and provide more detailed metrics. These settings are optional - the exporter works fine with basic statistics only.
 
 Restart Unbound after configuration changes:
 ```bash
@@ -136,6 +156,7 @@ The exporter provides the following comprehensive Prometheus metrics:
 
 ### Request List Statistics
 - `unbound_request_list_current` - Current requests in queue
+- `unbound_request_list_current_user` - Current user requests in queue
 - `unbound_request_list_avg` - Average request list size
 - `unbound_request_list_max` - Maximum request list size
 - `unbound_request_list_overwritten_total` - Overwritten requests
@@ -178,8 +199,11 @@ The exporter provides the following comprehensive Prometheus metrics:
 ### Histogram Metrics
 - `unbound_query_duration_seconds_bucket{le="X.X"}` - Query duration histogram buckets *(requires extended stats)*
 
-### Version Information
-- `unbound_info{version="1.x.x"}` - Unbound version info
+### Status & Configuration Information
+- `unbound_info{version="1.x.x"}` - Unbound version information
+- `unbound_verbosity_level` - Current verbosity level
+- `unbound_threads_configured` - Number of configured threads
+- `unbound_modules_count` - Number of loaded modules
 
 > **Note**: Some metrics (query types, classes, response codes) require Unbound to be configured with `statistics-extended: yes`. The exporter automatically detects and exports all available statistics from your Unbound instance.
 

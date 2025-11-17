@@ -114,6 +114,11 @@ get_basic_stats() {
                 value=$(extract_value "$line")
                 format_metric "request_list_current" "$value" "" "Current number of requests in the request list"
                 ;;
+            *"total.requestlist.current.user="*)
+                local value
+                value=$(extract_value "$line")
+                format_metric "request_list_current_user" "$value" "" "Current number of user requests in the request list"
+                ;;
             *"total.num.queries_ip_ratelimited="*)
                 local value
                 value=$(extract_value "$line")
@@ -323,21 +328,39 @@ get_thread_stats() {
 
 # Function to get uptime
 get_uptime() {
-    local uptime_output
-    uptime_output=$(unbound_cmd "status" | grep "uptime:" || echo "uptime: 0 seconds")
+    local stats
+    stats=$(unbound_cmd "stats_noreset")
     local uptime_seconds
-    uptime_seconds=$(echo "$uptime_output" | grep -oE '[0-9]+' | head -1 || echo "0")
+    uptime_seconds=$(echo "$stats" | grep "^time\.up=" | cut -d'=' -f2 | cut -d'.' -f1 || echo "0")
     format_metric "uptime_seconds" "$uptime_seconds" "" "Unbound uptime in seconds" "counter"
 }
 
-# Function to get version info
+# Function to get version and status info
 get_version_info() {
-    local version_output
-    version_output=$(unbound_cmd "version" 2>/dev/null || echo "unknown")
+    local status_output
+    status_output=$(unbound_cmd "status" 2>/dev/null || echo "version: unknown")
+    
     # Extract version number
     local version
-    version=$(echo "$version_output" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
+    version=$(echo "$status_output" | grep "^version:" | cut -d' ' -f2 || echo "unknown")
+    
+    # Extract verbosity level
+    local verbosity
+    verbosity=$(echo "$status_output" | grep "^verbosity:" | cut -d' ' -f2 || echo "0")
+    
+    # Extract number of threads
+    local threads
+    threads=$(echo "$status_output" | grep "^threads:" | cut -d' ' -f2 || echo "1")
+    
+    # Extract modules info
+    local modules
+    modules=$(echo "$status_output" | grep "^modules:" | cut -d' ' -f2 || echo "0")
+    
+    # Output metrics
     format_metric "info" "1" "version=\"$version\"" "Unbound version information"
+    format_metric "verbosity_level" "$verbosity" "" "Unbound verbosity level"
+    format_metric "threads_configured" "$threads" "" "Number of configured threads"
+    format_metric "modules_count" "$modules" "" "Number of loaded modules"
 }
 
 # Main function to collect and output all metrics
