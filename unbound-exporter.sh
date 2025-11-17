@@ -335,34 +335,6 @@ get_uptime() {
     format_metric "uptime_seconds" "$uptime_seconds" "" "Unbound uptime in seconds" "counter"
 }
 
-# Function to get version and status info
-get_version_info() {
-    local status_output
-    status_output=$(unbound_cmd "status" 2>/dev/null || echo "version: unknown")
-    
-    # Extract version number
-    local version
-    version=$(echo "$status_output" | grep "^version:" | cut -d' ' -f2 || echo "unknown")
-    
-    # Extract verbosity level
-    local verbosity
-    verbosity=$(echo "$status_output" | grep "^verbosity:" | cut -d' ' -f2 || echo "0")
-    
-    # Extract number of threads
-    local threads
-    threads=$(echo "$status_output" | grep "^threads:" | cut -d' ' -f2 || echo "1")
-    
-    # Extract modules info
-    local modules
-    modules=$(echo "$status_output" | grep "^modules:" | cut -d' ' -f2 || echo "0")
-    
-    # Output metrics
-    format_metric "info" "1" "version=\"$version\"" "Unbound version information"
-    format_metric "verbosity_level" "$verbosity" "" "Unbound verbosity level"
-    format_metric "threads_configured" "$threads" "" "Number of configured threads"
-    format_metric "modules_count" "$modules" "" "Number of loaded modules"
-}
-
 # Main function to collect and output all metrics
 collect_metrics() {
     # Check if unbound-control is available
@@ -383,8 +355,6 @@ collect_metrics() {
     echo ""
 
     # Collect all metrics
-    get_version_info
-    echo ""
     get_uptime
     echo ""
     get_basic_stats

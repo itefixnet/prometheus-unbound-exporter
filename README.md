@@ -100,12 +100,6 @@ Ensure Unbound has the control interface enabled in `/etc/unbound/unbound.conf`:
 ```
 server:
     # ... other settings ...
-    
-    # Enable extended statistics for query types, classes, and response codes
-    statistics-extended: yes
-    
-    # Optional: Enable histogram statistics for query duration metrics
-    statistics-cumulative: yes
 
 remote-control:
     control-enable: yes
@@ -114,19 +108,13 @@ remote-control:
     control-use-cert: no
 ```
 
-**Extended Statistics Configuration:**
+**Extended Statistics:**
 
-To enable the additional metrics mentioned in the metrics section, add these options to the `server:` section:
+The metrics marked with *(requires extended stats)* refer to additional statistics that may be available in some Unbound versions or configurations, but are **not universally supported**. The basic Unbound installation provides comprehensive statistics through the standard `unbound-control stats` command.
 
-- **`statistics-extended: yes`** - Enables query type, class, and response code statistics:
-  - `unbound_queries_by_type_total{type="A|AAAA|PTR|..."}` 
-  - `unbound_queries_by_class_total{class="IN|CH|..."}`
-  - `unbound_answers_by_rcode_total{rcode="NOERROR|NXDOMAIN|..."}`
+**Important:** The exporter automatically detects and exports all available statistics from your Unbound instance. No special configuration is required - if your Unbound version supports additional query type, class, or response code statistics, they will be automatically included.
 
-- **`statistics-cumulative: yes`** - Enables histogram and duration statistics:
-  - `unbound_query_duration_seconds_bucket{le="X.X"}`
-
-**Note:** Extended statistics may increase memory usage slightly and provide more detailed metrics. These settings are optional - the exporter works fine with basic statistics only.
+**Note:** Most standard Unbound installations provide all the core metrics (queries, cache hits, memory usage, thread statistics, etc.) without requiring additional configuration. The "extended stats" notation in the metrics list indicates optional metrics that may not be available in all Unbound versions.
 
 Restart Unbound after configuration changes:
 ```bash
@@ -191,21 +179,15 @@ The exporter provides the following comprehensive Prometheus metrics:
 - `unbound_thread_request_list_current_all{thread="N"}` - Current requests (all) per thread
 - `unbound_thread_request_list_current_user{thread="N"}` - Current requests (user) per thread
 
-### Query Statistics by Labels
-- `unbound_queries_by_type_total{type="A|AAAA|PTR|..."}` - Queries by type *(requires extended stats)*
-- `unbound_queries_by_class_total{class="IN|CH|..."}` - Queries by class *(requires extended stats)*
-- `unbound_answers_by_rcode_total{rcode="NOERROR|NXDOMAIN|..."}` - Answers by response code *(requires extended stats)*
+### Query Statistics by Labels *(Optional - Version Dependent)*
+- `unbound_queries_by_type_total{type="A|AAAA|PTR|..."}` - Queries by type *(if available)*
+- `unbound_queries_by_class_total{class="IN|CH|..."}` - Queries by class *(if available)*
+- `unbound_answers_by_rcode_total{rcode="NOERROR|NXDOMAIN|..."}` - Answers by response code *(if available)*
 
-### Histogram Metrics
-- `unbound_query_duration_seconds_bucket{le="X.X"}` - Query duration histogram buckets *(requires extended stats)*
+### Histogram Metrics *(Optional - Version Dependent)*
+- `unbound_query_duration_seconds_bucket{le="X.X"}` - Query duration histogram buckets *(if available)*
 
-### Status & Configuration Information
-- `unbound_info{version="1.x.x"}` - Unbound version information
-- `unbound_verbosity_level` - Current verbosity level
-- `unbound_threads_configured` - Number of configured threads
-- `unbound_modules_count` - Number of loaded modules
-
-> **Note**: Some metrics (query types, classes, response codes) require Unbound to be configured with `statistics-extended: yes`. The exporter automatically detects and exports all available statistics from your Unbound instance.
+> **Note**: The exporter automatically detects and exports all available statistics from your Unbound instance. Metrics marked as "if available" or "version dependent" will only appear if your Unbound version supports them - no special configuration is required.
 
 ## Usage Examples
 
