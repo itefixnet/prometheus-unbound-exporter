@@ -1,3 +1,5 @@
+![](grafana-dashboard-unbound.png)
+
 # Unbound Prometheus Exporter
 
 A lightweight, bash-based Prometheus exporter for Unbound DNS resolver statistics. This exporter uses only bash and socat to provide comprehensive DNS metrics for monitoring with Prometheus and Grafana.
